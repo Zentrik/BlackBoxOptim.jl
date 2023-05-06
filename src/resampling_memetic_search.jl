@@ -139,8 +139,9 @@ function local_search(rms::ResamplingMemeticSearcher, xstart, fitness)
 
     indices = collect(1:n)
 
+    xs = copy(xt)
     while !stop_due_to_low_precision(rms, ps)
-        xs = copy(xt)
+        xs .= xt
         # We randomize the order that each decision var is changed. This is not done in the orig papers.
         shuffle!(indices)
 

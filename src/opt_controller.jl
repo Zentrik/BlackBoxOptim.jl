@@ -453,7 +453,7 @@ Start a new optimization run, possibly with new parameters and report on results
 function run!(oc::OptController)
     # If this is not the first run we create the controller based on the previous one
     # to reuse the archive etc, otherwise create it based on the problem.
-    ctrl = if numruns(oc) > 0
+    ctrl::OptRunController = if numruns(oc) > 0
         OptRunController(lastrun(oc), oc.parameters)
     else
         # No previous run controller so create a new one from optimizer and problem.

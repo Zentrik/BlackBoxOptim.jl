@@ -58,7 +58,7 @@ end
 function evolve(de::DiffEvoOpt, crossover::CrossoverOperator)
     # Sample parents and target
     indices = select(de.select, de.population, 1 + numparents(crossover))
-    parent_indices = indices[1:numparents(crossover)]
+    parent_indices = @view indices[1:numparents(crossover)]
     #println("parent_indices = $(parent_indices)")
     target_index = indices[end]
     target = acquire_candi(de.population, target_index)
