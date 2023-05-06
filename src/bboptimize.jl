@@ -37,7 +37,7 @@ function setup_problem(func, parameters::Parameters)
     res = fitness(ind, problem)
     fitnessT = fitness_type(problem)
     if !isa(res, fitnessT)
-      throw(ArgumentError("The supplied fitness function does NOT return the expected fitness type $(fitnessT)"*
+      throw(ArgumentError("The supplied fitness function does NOT return the expected fitness type $(fitnessT) "*
                           "when called with a potential solution "*
                           "(when called with $(ind) it returned $(res) of type $(typeof(res)) so we cannot optimize it!"))
     end
