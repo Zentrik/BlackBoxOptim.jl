@@ -26,8 +26,9 @@ function apply!(xover::DiffEvoCrossoverOperator{3,1},
     p1ix, p2ix, p3ix = parentIndices
     # Always ensure at least one parameter is xovered
     mut_ix = rand(1:length(target))
-    @inbounds for i in 1:length(target)
-        if i == mut_ix || rand() <= cr
+    @fastmath @inbounds @simd for i in 1:length(target)
+        tmp = rand(Float32) # simd?
+        if i == mut_ix || tmp <= cr
             target[i] = pop[i,p3ix] + f * (pop[i,p1ix] - pop[i,p2ix])
         elseif target_index == 0
             target[i] = pop[i,p3ix]

@@ -23,13 +23,16 @@ function setup_problem(family::FunctionBasedProblemFamily, parameters::Parameter
     return problem, parameters
 end
 
+function convertTest(F::Type{<:AbstractFloat}, ::ScalarFitnessScheme{B, G}) where {B, G}
+    return ScalarFitnessScheme{B, F}()
+end
+
 function setup_problem(func, parameters::Parameters)
-    ss = check_and_create_search_space(parameters)
+    ss::ContinuousRectSearchSpace = check_and_create_search_space(parameters)::ContinuousRectSearchSpace
 
     # Now create an optimization problem with the given information. We currently reuse the 
     # type from our pre-defined problems so some of the data for the constructor is dummy.
-    problem = FunctionBasedProblem(func, "<unknown>", parameters[:FitnessScheme], ss,
-                                   parameters[:TargetFitness])
+    problem = FunctionBasedProblem(func, "<unknown>", ScalarFitnessScheme{true, Float32}(), ss::ContinuousRectSearchSpace, nothing)
 
     # validate fitness: create a random solution from the search space and ensure that 
     # fitness(problem) returns fitness_type(problem).
@@ -111,7 +114,7 @@ function bbsetup(functionOrProblem, parameters::Parameters = EMPTY_PARAMS; kwarg
     problem, params = setup_problem(functionOrProblem, chain(DefaultParameters, parameters))
     check_valid!(params)
 
-    optimizer_func = chain(SingleObjectiveMethods, MultiObjectiveMethods)[params[:Method]]
+    optimizer_func = de_rand_1_bin_radiuslimited #chain(SingleObjectiveMethods, MultiObjectiveMethods)[params[:Method]]
     optimizer = optimizer_func(problem, params)
 
     # Now set up a controller for this problem. This will handle

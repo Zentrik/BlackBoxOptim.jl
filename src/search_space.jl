@@ -25,19 +25,19 @@ The point of the `SearchSpace`.
 The abstract type. It allows different actual implementations to be used,
 e.g `Vector` or `SubArray`.
 """
-const AbstractIndividual = AbstractVector{Float64}
+const AbstractIndividual = AbstractVector{Float32}
 
 """
 The point of the `SearchSpace`.
 
 The concrete type that could be used for storage.
 """
-const Individual = Vector{Float64}
+const Individual = Vector{Float32}
 
 """
 The valid range of values for a specific dimension of `SearchSpace`.
 """
-const ParamBounds = Tuple{Float64,Float64}
+const ParamBounds = Union{Tuple{Float32, Float32}, Tuple{Float64, Float64}}
 
 numdims(ss::RectSearchSpace) = length(dimmin(ss))
 
@@ -108,9 +108,9 @@ end
 `SearchSpace` defined by a continuous range of valid values for each dimension.
 """
 struct ContinuousRectSearchSpace <: RectSearchSpace
-    dimmin::Vector{Float64}    # minimal valid value per dimension
-    dimmax::Vector{Float64}    # maximal valid value per dimension
-    dimdelta::Vector{Float64}  # delta/diameter (dimmax-dimmin) per dimension
+    dimmin::Vector{Float32}    # minimal valid value per dimension
+    dimmax::Vector{Float32}    # maximal valid value per dimension
+    dimdelta::Vector{Float32}  # delta/diameter (dimmax-dimmin) per dimension
 
     function ContinuousRectSearchSpace(
         dimmin::AbstractVector{<:Real},
@@ -266,7 +266,7 @@ end
 Generate one random candidate.
 """
 rand_individual(ss::RectSearchSpace) =
-    _round!(rand(numdims(ss)) .* dimdelta(ss) .+ dimmin(ss), ss)
+    _round!(rand(eltype(ss.dimmin), numdims(ss)) .* dimdelta(ss) .+ dimmin(ss), ss)
 
 """
     rand_individuals(ss, n; [method=:latin_hypercube])

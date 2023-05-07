@@ -58,7 +58,7 @@ objfunc(p::FunctionBasedProblem) = p.objfunc
 
 Evaluates the fitness of a candidate.
 """
-fitness(x, p::FunctionBasedProblem) = objfunc(p)(x)
+@inline fitness(x, p::FunctionBasedProblem) = objfunc(p)(x)
 
 Base.copy(p::FunctionBasedProblem) =
     FunctionBasedProblem(deepcopy(p.objfunc), deepcopy(p.name),

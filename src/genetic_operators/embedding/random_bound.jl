@@ -18,7 +18,7 @@ function apply!(eo::RandomBound, target::AbstractIndividual, ref::AbstractIndivi
     ssmins = dimmin(ss)
     ssmaxs = dimmax(ss)
 
-    @inbounds for i in eachindex(target)
+    @fastmath @inbounds for i in eachindex(target)
         l, u = ssmins[i], ssmaxs[i]
 
         if target[i] < l

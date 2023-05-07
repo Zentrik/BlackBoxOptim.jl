@@ -35,6 +35,7 @@ function trace_state(io::IO, de::DiffEvoOpt, mode::Symbol)
 end
 
 ask(de::DiffEvoOpt) = evolve(de, de.modify)
+ask!(de::DiffEvoOpt, x, inds, candidates) = evolve(de, de.modify, x, inds, candidates)
 
 function evolve(de::DiffEvoOpt, op::GeneticOperatorsMixture)
     sel_op, tag = next(op)
@@ -55,9 +56,26 @@ function evolve(de::DiffEvoOpt, mutate::MutationOperator)
     return evolved_pair(de, target, trial, mutate, 0)
 end
 
-function evolve(de::DiffEvoOpt, crossover::CrossoverOperator)
+# function evolve(de::DiffEvoOpt, crossover::CrossoverOperator)
+#     # Sample parents and target
+#     indices = select(de.select, de.population, 1 + numparents(crossover))
+#     parent_indices = @view indices[1:numparents(crossover)]
+#     #println("parent_indices = $(parent_indices)")
+#     target_index = indices[end]
+#     target = acquire_candi(de.population, target_index)
+#     #println("target[$(target_index)] = $(target)")
+
+#     # Crossover parents and target
+#     @assert numchildren(crossover)==1
+#     trial = acquire_candi(de.population, target)
+#     apply!(crossover, trial.params, target_index,
+#            de.population, parent_indices)
+#     return evolved_pair(de, target, trial, crossover, 0)
+# end
+
+function evolve(de::DiffEvoOpt, crossover::CrossoverOperator, x, inds, candidates)
     # Sample parents and target
-    indices = select(de.select, de.population, 1 + numparents(crossover))
+    indices = select!(de.select, de.population, 1 + numparents(crossover), x, inds)
     parent_indices = @view indices[1:numparents(crossover)]
     #println("parent_indices = $(parent_indices)")
     target_index = indices[end]
@@ -69,14 +87,17 @@ function evolve(de::DiffEvoOpt, crossover::CrossoverOperator)
     trial = acquire_candi(de.population, target)
     apply!(crossover, trial.params, target_index,
            de.population, parent_indices)
-    return evolved_pair(de, target, trial, crossover, 0)
+
+    return evolved_pair(de, target, trial, crossover, candidates, 0)
 end
 
 """
 Post-process the evolved pair.
 """
 function evolved_pair(de::DiffEvoOpt, target::Candidate{F}, trial::Candidate{F},
-                      op::GeneticOperator, tag::Int = 0) where F
+                      op::GeneticOperator,
+                      candidates::Vector{Candidate{F}},
+                      tag::Int = 0) where F
     # embed the trial parameter vector into the search space
     apply!(de.embed, trial.params, de.population, target.index)
     target.extra = trial.extra = op
@@ -85,7 +106,9 @@ function evolved_pair(de::DiffEvoOpt, target::Candidate{F}, trial::Candidate{F},
         reset_fitness!(trial, de.population)
     end
 
-    return Candidate{F}[trial, target]
+    candidates[1] = trial
+    candidates[2] = target
+    return candidates
 end
 
 function tell!(de::DiffEvoOpt,
@@ -93,7 +116,7 @@ function tell!(de::DiffEvoOpt,
         rankedCandidates::Vector{Candidate{F}}) where F
     n_acceptable_candidates = length(rankedCandidates)÷2
     num_better = 0
-    for i in eachindex(rankedCandidates)
+    @inbounds for i in eachindex(rankedCandidates)
         candi = rankedCandidates[i]
         # accept the modified individuals from the top ranked half
         if i <= n_acceptable_candidates
@@ -127,8 +150,8 @@ function adjust!(de::DiffEvoOpt, candi::Candidate, is_improved::Bool)
         old_fitness = candi.fitness
     end
 
-    adjust!(candi.extra::GeneticOperator, candi.tag, candi.index, candi.fitness,
-            fitness(population(de), candi.index), is_improved)
+    # adjust!(candi.extra::GeneticOperator, candi.tag, candi.index, candi.fitness,
+    #         fitness(population(de), candi.index), is_improved)
 end
 
 # Now we can create specific DE optimizers that are commonly used in the
@@ -163,7 +186,7 @@ de_rand_1_bin_radiuslimited(problem::OptimizationProblem,
                             options::Parameters = EMPTY_PARAMS,
                             name = "DE/rand/1/bin/radiuslimited") =
     diffevo(problem, options, name,
-            RadiusLimitedSelector(chain(DE_DefaultOptions, options)[:SamplerRadius]))
+            RadiusLimitedSelector(8))
 
 de_rand_2_bin_radiuslimited(problem::OptimizationProblem,
                             options::Parameters = EMPTY_PARAMS,

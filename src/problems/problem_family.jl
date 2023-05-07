@@ -63,11 +63,11 @@ end
 
 @deprecate fixed_dim_problem instantiate
 
-MinimizationProblemFamily(f::Function, name::String, range::ParamBounds, fmin::Float64) =
-    FunctionBasedProblemFamily(f, name, MinimizingFitnessScheme, range, fmin)
+MinimizationProblemFamily(f::Function, name::String, range::ParamBounds, fmin::F) where F<:AbstractFloat =
+    FunctionBasedProblemFamily(f, name, MinimizingFitnessScheme(F), range, fmin)
 
 MinimizationProblemFamily(f::Function, name::String, range::ParamBounds) =
-    FunctionBasedProblemFamily(f, name, MinimizingFitnessScheme, range)
+    FunctionBasedProblemFamily(f, name, MinimizingFitnessScheme(eltype(range)), range)
 
 minimization_problem(f::Function, name::String, range::ParamBounds, ndim::Int) =
     instantiate(MinimizationProblemFamily(f, name, range), ndim)
@@ -75,7 +75,7 @@ minimization_problem(f::Function, name::String, range::ParamBounds, ndim::Int) =
 minimization_problem(f::Function, range::ParamBounds, ndim::Int) =
     instantiate(MinimizationProblemFamily(f, "<unknown>", range), ndim)
 
-minimization_problem(f::Function, name::String, range::ParamBounds, ndim::Int, fmin::Float64) =
+minimization_problem(f::Function, name::String, range::ParamBounds, ndim::Int, fmin::F) where F<:AbstractFloat =
     instantiate(MinimizationProblemFamily(f, name, range, fmin), ndim)
 
 """

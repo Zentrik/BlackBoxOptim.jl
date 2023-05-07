@@ -27,12 +27,14 @@ Candidate can be either a member of the population (`index` > 0) or
 a standalone solution (`index` == -1).
 Can carry additional information, like the `tag` or the genetic operator applied (`extra`).
 """
+abstract type GeneticOperator end
+
 mutable struct Candidate{F} <: FitIndividual{F}
     params::Individual
     index::Int          # index of individual in the population, -1 if unassigned # FIXME nothing if unassigned
-    fitness::F          # fitness
+    fitness::Float32          # fitness
 
-    extra::Any          # extra information
+    extra::Union{Nothing, GeneticOperator}          # extra information
     tag::Int            # additional information set by the genetic operator
 
     Candidate{F}(params::Individual, index::Int = -1,

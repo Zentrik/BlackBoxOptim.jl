@@ -39,15 +39,15 @@ abstract type RatioFitnessScheme{F} <: FitnessScheme{F} end
 # FIXME is it necessary?
 
 """
-`Float64`-valued scalar fitness scheme.
+`Float`-valued scalar fitness scheme.
 The boolean type parameter `MIN` specifies if smaller fitness values
 are better (`true`) or worse (`false`).
 """
-struct ScalarFitnessScheme{MIN} <: RatioFitnessScheme{Float64}
+struct ScalarFitnessScheme{MIN, F<:AbstractFloat} <: RatioFitnessScheme{F}
 end
 
-const MinimizingFitnessScheme = ScalarFitnessScheme{true}()
-const MaximizingFitnessScheme = ScalarFitnessScheme{false}()
+MinimizingFitnessScheme(::Type{F}=Float32) where F<:AbstractFloat = ScalarFitnessScheme{true, F}()
+MaximizingFitnessScheme(::Type{F}=Float32) where F<:AbstractFloat = ScalarFitnessScheme{false, F}()
 
 is_minimizing(::ScalarFitnessScheme{MIN}) where {MIN} = MIN
 nafitness(::Type{F}) where {F<:Number} = convert(F, NaN)
@@ -60,8 +60,8 @@ Aggregation is just the identity function for scalar fitness.
 """
 aggregate(fitness::F, ::RatioFitnessScheme{F}) where {F<:Number} = fitness
 
-is_better(f1::Float64, f2::Float64, scheme::ScalarFitnessScheme{true}) = f1 < f2
-is_better(f1::Float64, f2::Float64, scheme::ScalarFitnessScheme{false}) = f1 > f2
+is_better(f1::F, f2::F, ::ScalarFitnessScheme{true}) where {F<:Number} = f1 < f2
+is_better(f1::F, f2::F, ::ScalarFitnessScheme{false}) where {F<:Number} = f1 > f2
 
 """
 Complex-valued fitness.

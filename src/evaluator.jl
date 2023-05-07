@@ -23,7 +23,7 @@ Calculate fitness of `candidate` and optionally apply `f`.
 function update_fitness!(f::Any, e::Evaluator, candidate::Candidate; force::Bool=false)
     # evaluate fitness if not known yet
     if force || isnafitness(candidate.fitness, fitness_scheme(e.archive))
-        candidate.fitness = fitness(candidate.params, e, candidate.tag)
+        @inline candidate.fitness = fitness(candidate.params, e, candidate.tag)
         (f !== nothing) && f(candidate)
     end
     return candidate
@@ -146,7 +146,7 @@ parameters and calculated fitness.
 
 Returns the fitness in the archived format.
 """
-function fitness(params::Individual, e::ProblemEvaluator, tag::Int=0)
+@inline function fitness(params::Individual, e::ProblemEvaluator, tag::Int=0)
     e.last_fitness = fit = fitness(params, e.problem)
     e.num_evals += 1
     fita = archived_fitness(fit, e.archive)

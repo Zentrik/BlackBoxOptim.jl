@@ -17,12 +17,12 @@ fitness_type(pop::PopulationWithFitness) = fitness_type(typeof(pop))
 candidate_type(::Type{P}) where P<:PopulationWithFitness = Candidate{fitness_type(P)}
 candidate_type(pop::PopulationWithFitness) = candidate_type(typeof(pop))
 
-const AbstractPopulationMatrix = AbstractMatrix{Float64}
+const AbstractPopulationMatrix{F} = AbstractMatrix{F} where F<:AbstractFloat
 
 """
 The simplest `Population` implementation -- a matrix of floats, each column is an individual.
 """
-const PopulationMatrix = Matrix{Float64}
+const PopulationMatrix{F} = Matrix{F} where F<:AbstractFloat
 
 popsize(pop::AbstractPopulationMatrix) = size(pop, 2)
 numdims(pop::AbstractPopulationMatrix) = size(pop, 1)
@@ -39,7 +39,7 @@ The default implementation of `PopulationWithFitness{F}`.
 """
 mutable struct FitPopulation{F} <: PopulationWithFitness{F}
     # The population is a matrix of floats, each column being an individual.
-    individuals::PopulationMatrix
+    individuals::PopulationMatrix{F}
 
     nafitness::F
     fitness::Vector{F}
@@ -223,15 +223,15 @@ function population(problem::OptimizationProblem,
                     nafitness::F = nafitness(fitness_scheme(problem));
                     ntransient::Integer = 0,
                     method::Symbol = :latin_hypercube) where F
-    if !haskey(options, :Population)
-        pop = rand_individuals(search_space(problem), get(options, :PopulationSize, 50) + ntransient, method=method)
-    else
-        pop = options[:Population]
-    end
+    # if !haskey(options, :Population)
+        pop = rand_individuals(search_space(problem), get(options, :PopulationSize, 50) + ntransient, method=method)::Matrix{Float32}
+    # else
+        # pop = options[:Population]
+    # end
     if isa(pop, Population)
         return pop
     elseif isa(pop, AbstractPopulationMatrix)
-        return FitPopulation(pop, nafitness, ntransient=ntransient)
+        return FitPopulation(pop, nafitness, ntransient=ntransient)::FitPopulation{Float32}
     else
         throw(ArgumentError("\"Population\" parameter is of unsupported type: $(typeof(pop))"))
     end

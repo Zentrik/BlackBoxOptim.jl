@@ -2,19 +2,13 @@
 Create `Evaluator` instance for a given `problem`.
 """
 function make_evaluator(problem::OptimizationProblem, archive=nothing, params::Parameters=ParamsDict())
-    workers = get(params, :Workers, Vector{Int}())
-    nthreads = get(params, :NThreads, 0)
+    workers = get(params, :Workers, Vector{Int}())::Vector{Int}
+    nthreads = get(params, :NThreads, 0)::Int
     if archive===nothing
         # make the default archive
-        archiveCapacity = get(params, :ArchiveCapacity, 10)
+        archiveCapacity = get(params, :ArchiveCapacity, 10)::Int
         archive = TopListArchive(fitness_scheme(problem), numdims(problem), archiveCapacity)
-    end
-    if length(workers) > 0
-        return ParallelEvaluator(problem, archive, pids=workers)
-    elseif nthreads > 0
-        return MultithreadEvaluator(problem, archive, nworkers=nthreads)
-    else
-        return ProblemEvaluator(problem, archive)
+        return ProblemEvaluator(problem, TopListArchive(fitness_scheme(problem), numdims(problem), archiveCapacity))
     end
 end
 
@@ -266,11 +260,11 @@ function trace_progress(ctrl::OptRunController)
     trace_state(stdout, ctrl.optimizer, ctrl.trace_mode)
 end
 
-function step!(ctrl::OptRunController{<:AskTellOptimizer})
+function step!(ctrl::OptRunController{<:AskTellOptimizer}, x, inds, candidates)
     # The ask()/tell() interface is more general since you can mix and max
     # elements from several optimizers using it. However, in this top-level
     # execution function we do not make use of this flexibility...
-    candidates = ask(ctrl.optimizer)
+    ask!(ctrl.optimizer, x, inds, candidates)
     rank_by_fitness!(ctrl.evaluator, candidates)
     return tell!(ctrl.optimizer, candidates)
 end
@@ -311,14 +305,19 @@ function run!(ctrl::OptRunController)
 
         ctrl.start_time = time()
         ctrl.num_steps = 0
+
+        n = 1 + numparents(ctrl.optimizer.modify)
+        x = Vector{Int}(undef, n)
+        inds = Vector{Int}(undef, max(ctrl.optimizer.select.radius, n+2))
+        candidates = Candidate{Float32}[acquire_candi(ctrl.optimizer.population, 1), acquire_candi(ctrl.optimizer.population, 1)]
         while isempty(ctrl.stop_reason)
             # Report on progress every now and then...
-            if (time() - ctrl.last_report_time) > ctrl.trace_interval
-                trace_progress(ctrl)
-            end
+            # if (time() - ctrl.last_report_time) > ctrl.trace_interval
+            #     trace_progress(ctrl)
+            # end
 
             # Take the step and then update the counters
-            nstep_better = step!(ctrl)
+            nstep_better = step!(ctrl, x, inds, candidates)
             ctrl.num_better += nstep_better
             ctrl.num_better_since_last_report += nstep_better
             ctrl.num_steps += 1
@@ -453,12 +452,12 @@ Start a new optimization run, possibly with new parameters and report on results
 function run!(oc::OptController)
     # If this is not the first run we create the controller based on the previous one
     # to reuse the archive etc, otherwise create it based on the problem.
-    ctrl::OptRunController = if numruns(oc) > 0
-        OptRunController(lastrun(oc), oc.parameters)
-    else
+    ctrl::OptRunController = #if numruns(oc) > 0
+        # OptRunController(lastrun(oc), oc.parameters)
+    # else
         # No previous run controller so create a new one from optimizer and problem.
         OptRunController(oc.optimizer, oc.problem, oc.parameters)
-    end
+    # end
     push!(oc.runcontrollers, ctrl)
 
     # If this is the first run we might have to init the RNG.

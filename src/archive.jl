@@ -99,7 +99,7 @@ function delta_fitness(a::TopListArchive)
         Inf
     else
         # FIXME aggregate fitness?
-        abs(a.fitness_history[end].fitness - a.fitness_history[end-1].fitness)
+        @fastmath abs(a.fitness_history[end].fitness - a.fitness_history[end-1].fitness)
     end
 end
 
