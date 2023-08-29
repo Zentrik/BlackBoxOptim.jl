@@ -21,13 +21,13 @@ const DiffEvoRandBin2 = DiffEvoRandBin{5}
 
 function apply!(xover::DiffEvoCrossoverOperator{3,1},
                 target, target_index::Int, pop, parentIndices)
-    @assert length(parentIndices) == 3
+    # @assert length(parentIndices) == 3
     cr, f = crossover_parameters(xover, pop, target_index)
     p1ix, p2ix, p3ix = parentIndices
     # Always ensure at least one parameter is xovered
     mut_ix = rand(1:length(target))
     @fastmath @inbounds @simd for i in 1:length(target)
-        tmp = rand(Float32) # simd?
+        tmp = rand() # simd?
         if i == mut_ix || tmp <= cr
             target[i] = pop[i,p3ix] + f * (pop[i,p1ix] - pop[i,p2ix])
         elseif target_index == 0

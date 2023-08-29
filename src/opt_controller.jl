@@ -307,8 +307,8 @@ function run!(ctrl::OptRunController)
         ctrl.num_steps = 0
 
         n = 1 + numparents(ctrl.optimizer.modify)
-        x = Vector{Int}(undef, n)
-        inds = Vector{Int}(undef, max(ctrl.optimizer.select.radius, n+2))
+        x = zeros(Int, n)
+        inds = zeros(Int, max(ctrl.optimizer.select.radius, n+2))
         candidates = Candidate{Float32}[acquire_candi(ctrl.optimizer.population, 1), acquire_candi(ctrl.optimizer.population, 1)]
         while isempty(ctrl.stop_reason)
             # Report on progress every now and then...
